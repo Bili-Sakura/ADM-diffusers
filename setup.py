@@ -1,7 +1,10 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 setup(
-    name="guided-diffusion",
-    py_modules=["guided_diffusion"],
-    install_requires=["blobfile>=1.0.5", "torch", "tqdm"],
+    name="adm-diffusers",
+    version="0.1.0",
+    description="Diffusers-style ADM implementation",
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
+    install_requires=["numpy", "torch", "tqdm", "Pillow"],
 )
