@@ -31,10 +31,33 @@ python scripts/sample_adm.py \
   --model adm-64-diffusers \
   --num-samples 100 \
   --batch-size 4 \
-  --image-size 64 \
   --num-inference-steps 250 \
+  --guidance-scale 0 \
+  --use-ddim \
+  --class-label 207 \
   --output samples_64.npz \
   --image-output-dir outputs
+```
+
+## ADM-G sampling notes
+
+- UNet outputs **6 channels** when `learn_sigma=True` (3 for noise ε, 3 for learned variance σ).
+- `guidance_scale` is **classifier guidance** strength (ADM-G), not Stable-Diffusion-style CFG.
+- **UNet-only** sampling (no classifier): `guidance_scale=0` with `class_labels` still required for class-conditional checkpoints.
+- With **DDIM**, the pipeline splits ε/σ before `scheduler.step`; with **DDPM + `learned_range`**, all 6 channels are kept.
+
+```python
+from diffusers import DDIMScheduler
+
+pipe = ADMPipeline.from_pretrained("path/to/checkpoint").to("cuda")
+pipe.scheduler = DDIMScheduler.from_config(pipe.scheduler.config)
+class_id = pipe.get_label_ids("golden retriever")[0]
+
+# UNet-only (no classifier guidance)
+image = pipe(class_labels=class_id, guidance_scale=0.0, num_inference_steps=50).images[0]
+
+# Full ADM-G
+image = pipe(class_labels=class_id, guidance_scale=4.0, num_inference_steps=50).images[0]
 ```
 
 ## Notes
